@@ -3,7 +3,7 @@ name: Build Windows EXE
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:   # Manuel çalıştırma butonu ekler
+  workflow_dispatch:
 
 jobs:
   build:
@@ -15,7 +15,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'   # veya 9.0.x eğer repo güncelse
+        dotnet-version: '9.0.x'   # net9.0 desteklesin diye 9.x kur (net8 de çalışır)
 
     - name: Restore dependencies
       run: dotnet restore
@@ -23,11 +23,16 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
 
-    - name: Publish single-file exe
-      run: dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true -o ./publish
+    - name: Publish single-file exe for net8.0
+      run: dotnet publish -c Release -f net8.0 -r win-x64 --self-contained true /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true -o ./publish-net8
 
-    - name: Upload EXE artifact
+    - name: Publish single-file exe for net9.0 (optional)
+      run: dotnet publish -c Release -f net9.0 -r win-x64 --self-contained true /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true -o ./publish-net9
+
+    - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: unattend-generator-exe
-        path: publish/*.exe
+        name: unattend-generator-exes
+        path: |
+          ./publish-net8/*.exe
+          ./publish-net9/*.exe
